@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QUANT-ENGINE // HUD TÁCTICO</title>
+  <style>
+    :root {
+      --bg: #070a0f;
+      --panel: #0d131d;
+      --border: #1b2638;
+      --accent: #00f0ff;
+      --green: #00e676;
+      --amber: #ffab00;
+      --red: #ff3d57;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 16px;
+      line-height: 1.4;
+    }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .title {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+    }
+    .badge {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255, 61, 87, 0.15);
+      color: var(--red);
+      border: 1px solid var(--red);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge.online {
+      background: rgba(0, 230, 118, 0.12);
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .conn-bar {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr auto;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 720px) {
+      .conn-bar { grid-template-columns: 1fr; }
+    }
+    input {
+      background: #05080c;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      width: 100%;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    button {
+      background: var(--accent);
+      color: #031018;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.88; }
+    button.secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .card-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+    .card-val {
+      font-family: var(--mono);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .card-sub {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--green);
+      margin-top: 4px;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    h2 {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 9px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 600; font-size: 0.72rem; }
+    .pill {
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--accent);
+    }
+    .kelly-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .console {
+      background: #04060a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      height: 210px;
+      overflow-y: auto;
+      color: #94a3b8;
+    }
+    .log-line { margin-bottom: 5px; }
+    .log-ok { color: var(--green); }
+    .log-warn { color: var(--amber); }
+    .log-err { color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <div class="title">QUANT-ENGINE-CORE // HUD OPERATIVO</div>
+      <div style="font-size:0.78rem; color:var(--muted); font-family:var(--mono);">
+        ARQUITECTURA AUTÓNOMA · POLYGON PoS · MODIFIED QUARTER-KELLY
+      </div>
+    </div>
+    <div id="statusBadge" class="badge">
+      <span class="dot"></span>
+      <span id="statusText">DESCONECTADO</span>
+    </div>
+  </div>
+
+  <div class="conn-bar">
+    <input id="apiUrl" type="text" value="https://quant-engine-core.onrender.com" placeholder="URL del Core (https://...)" />
+    <input id="apiSecret" type="password" value="QuantCore2026!" placeholder="ENGINE_SECRET" />
+    <button onclick="connectEngine()">CONECTAR MOTOR</button>
+  </div>
+
+  <div class="grid-kpi">
+    <div class="card">
+      <div class="card-label">LATENCIA CORE (PING)</div>
+      <div class="card-val" id="kpiLatency">-- ms</div>
+      <div class="card-sub" id="kpiEndpoint">Esperando enlace...</div>
+    </div>
+    <div class="card">
+      <div class="card-label">NODO POLYGON WSS</div>
+      <div class="card-val" id="kpiBlock">STANDBY</div>
+      <div class="card-sub">polygon-bor-rpc.publicnode.com</div>
+    </div>
+    <div class="card">
+      <div class="card-label">FRACCIÓN QUARTER-KELLY</div>
+      <div class="card-val" id="kpiKelly">0.25x</div>
+      <div class="card-sub" id="kpiAlloc">Asignación óptima: --%</div>
+    </div>
+    <div class="card">
+      <div class="card-label">BÓVEDA TESORERÍA</div>
+      <div class="card-val" style="font-size:1.1rem;" id="kpiTreasury">0x0000...0000</div>
+      <div class="card-sub" style="color:var(--amber);">Rabby Vault Link</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="card">
+      <h2>
+        <span>PERFILES DE ESTRATEGIA (7 RABBY WALLETS)</span>
+        <span class="pill">MODIFIED 0.25 KELLY</span>
+      </h2>
+      <table>
+        <thead>
+          <tr>
+            <th>PERFIL</th>
+            <th>ESTRATEGIA</th>
+            <th>EDGE EST.</th>
+            <th>PESO KELLY</th>
+            <th>ESTADO</th>
+          </tr>
+        </thead>
+        <tbody id="strategyTable"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="card">
+        <h2><span>SIMULADOR RÁPIDO QUARTER-KELLY</span></h2>
+        <div class="kelly-box">
+          <div>
+            <div class="card-label">PROB. ÉXITO (p)</div>
+            <input id="winProb" type="number" step="0.01" min="0.01" max="0.99" value="0.58" oninput="calcKelly()" />
+          </div>
+          <div>
+            <div class="card-label">RATIO PAYOFF (b)</div>
+            <input id="payoffRatio" type="number" step="0.1" min="0.1" value="1.6" oninput="calcKelly()" />
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#05080c; padding:10px 12px; border-radius:6px; border:1px solid var(--border); font-family:var(--mono); font-size:0.82rem;">
+          <span>TAMAÑO POSICIÓN SUGERIDO:</span>
+          <strong id="kellyResult" style="color:var(--green); font-size:1rem;">7.94%</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>
+          <span>TELEMETRÍA EN VIVO</span>
+          <button class="secondary" style="padding:4px 10px; font-size:0.72rem;" onclick="clearLogs()">LIMPIAR</button>
+        </h2>
+        <div class="console" id="consoleLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STRATEGIES = [
+      { id: 'W-01', name: 'Arbitrage DEX-A', edge: '+1.85%', weight: '18.5%', status: 'ARMED' },
+      { id: 'W-02', name: 'Mean Reversion POL', edge: '+1.42%', weight: '15.0%', status: 'ARMED' },
+      { id: 'W-03', name: 'Liquidity Skew', edge: '+2.10%', weight: '19.5%', status: 'ARMED' },
+      { id: 'W-04', name: 'Volatility Breakout', edge: '+1.15%', weight: '12.0%', status: 'ARMED' },
+      { id: 'W-05', name: 'Gamma Scalp Core', edge: '+1.60%', weight: '16.0%', status: 'ARMED' },
+      { id: 'W-06', name: 'Delta Neutral Pool', edge: '+0.95%', weight: '10.0%', status: 'STANDBY' },
+      { id: 'W-07', name: 'Tail-Hedge Reserve', edge: '+0.80%', weight: '9.0%', status: 'STANDBY' }
+    ];
+
+    function renderStrategies() {
+      const tbody = document.getElementById('strategyTable');
+      tbody.innerHTML = STRATEGIES.map(s => `
+        <tr>
+          <td style="color:var(--accent); font-weight:700;">${s.id}</td>
+          <td>${s.name}</td>
+          <td style="color:var(--green);">${s.edge}</td>
+          <td>${s.weight}</td>
+          <td><span class="pill">${s.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function log(msg, type = '') {
+      const box = document.getElementById('consoleLog');
+      const time = new Date().toLocaleTimeString();
+      const cls = type ? `log-${type}` : '';
+      box.innerHTML += `<div class="log-line ${cls}">[${time}] ${msg}</div>`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function clearLogs() {
+      document.getElementById('consoleLog').innerHTML = '';
+    }
+
+    function calcKelly() {
+      const p = parseFloat(document.getElementById('winProb').value) || 0;
+      const b = parseFloat(document.getElementById('payoffRatio').value) || 1;
+      const q = 1 - p;
+      const fullKelly = (b * p - q) / b;
+      const quarterKelly = Math.max(0, fullKelly * 0.25) * 100;
+      document.getElementById('kellyResult').textContent = quarterKelly.toFixed(2) + '%';
+      document.getElementById('kpiAlloc').textContent = `Asignación óptima: ${quarterKelly.toFixed(2)}%`;
+    }
+
+    let pollTimer = null;
+
+    async function connectEngine() {
+      const baseUrl = document.getElementById('apiUrl').value.replace(/\/+$/, '');
+      const secret = document.getElementById('apiSecret').value;
+      const badge = document.getElementById('statusBadge');
+      const statusText = document.getElementById('statusText');
+
+      log(`Iniciando enlace con ${baseUrl}...`, 'warn');
+
+      const probe = async () => {
+        const t0 = performance.now();
+        try {
+          // Consulta el esquema OpenAPI/health del servidor FastAPI
+          const res = await fetch(`${baseUrl}/openapi.json`, {
+            headers: { 'X-Engine-Secret': secret, 'Authorization': `Bearer ${secret}` }
+          });
+          const dt = Math.round(performance.now() - t0);
+
+          if (res.ok) {
+            const spec = await res.json();
+            const routes = Object.keys(spec.paths || {});
+            badge.classList.add('online');
+            statusText.textContent = 'CORE ONLINE';
+            document.getElementById('kpiLatency').textContent = `${dt} ms`;
+            document.getElementById('kpiEndpoint').textContent = `${routes.length} rutas API detectadas`;
+            document.getElementById('kpiBlock').textContent = 'CONECTADO';
+            log(`Heartbeat OK (${dt}ms) · Rutas activas: ${routes.join(', ') || '/'}`, 'ok');
+
+            // Si existe ruta /health o /status, intenta leer telemetría real
+            const statusRoute = routes.find(r => r.includes('status') || r.includes('health') || r.includes('state'));
+            if (statusRoute) {
+              const stRes = await fetch(`${baseUrl}${statusRoute}`, {
+                headers: { 'X-Engine-Secret': secret, 'Authorization': `Bearer ${secret}` }
+              });
+              if (stRes.ok) {
+                const data = await stRes.json();
+                if (data.treasury) {
+                  document.getElementById('kpiTreasury').textContent =
+                    data.treasury.slice(0, 6) + '...' + data.treasury.slice(-4);
+                }
+                if (data.block_number) {
+                  document.getElementById('kpiBlock').textContent = `#${data.block_number}`;
+                }
+                log(`Telemetría recibida: ${JSON.stringify(data).slice(0, 110)}...`, 'ok');
+              }
+            }
+          } else {
+            throw new Error(`HTTP ${res.status}`);
+          }
+        } catch (err) {
+          badge.classList.remove('online');
+          statusText.textContent = 'RECONECTANDO';
+          log(`Aviso de conexión (${err.message}). Si Render estaba dormido, despierta en ~30s.`, 'warn');
+        }
+      };
+
+      await probe();
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(probe, 10000);
+    }
+
+    renderStrategies();
+    calcKelly();
+    log('HUD táctico inicializado. Presiona CONECTAR MOTOR para enlazar con Render.', 'ok');
+  </script>
+</body>
+</html>
